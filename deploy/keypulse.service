@@ -1,0 +1,18 @@
+[Unit]
+Description=KeyPulse Telegram Bot + HWID API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/keypulse
+EnvironmentFile=/opt/keypulse/.env
+ExecStart=/opt/keypulse/.venv/bin/python /opt/keypulse/main.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

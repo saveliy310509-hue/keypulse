@@ -1,0 +1,26 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# ВАЖНО: disk (постоянный диск) доступен только на платных инстансах.
+# На free-плане база SQLite будет теряться при каждом деплое.
+services:
+  - type: web
+    name: keypulse
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: API_SECRET
+        sync: false
+      - key: DATABASE_PATH
+        value: /var/data/keypulse.db
+      - key: PYTHON_VERSION
+        value: 3.12.0
+    disk:
+      name: keypulse-data
+      mountPath: /var/data
+      sizeGB: 1

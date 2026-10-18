@@ -1,0 +1,11 @@
+services:
+  keypulse:
+    build: .
+    container_name: keypulse
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # наружу нужен только если к HWID API обращаются клиенты (плагин/приложение)
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data

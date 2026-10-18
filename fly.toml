@@ -1,0 +1,34 @@
+# Fly.io — https://fly.io/docs/reference/configuration/
+# Перед деплоем: fly volumes create keypulse_data --size 1
+app = "keypulse-bot"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  API_HOST = "0.0.0.0"
+  API_PORT = "8080"
+  DATABASE_PATH = "/data/keypulse.db"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/health"
+
+[[mounts]]
+  source = "keypulse_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
