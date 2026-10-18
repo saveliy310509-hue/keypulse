@@ -19,14 +19,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
-`.env` уже заполнен:
+Скопируй `.env.example` в `.env` и заполни:
 
 ```env
-BOT_TOKEN=<BOT_TOKEN>
-ADMIN_ID=8554520733
+BOT_TOKEN=<токен от @BotFather>
+ADMIN_ID=<твой telegram id>
 API_HOST=0.0.0.0
 API_PORT=8080
-API_SECRET=<API_SECRET>
+API_SECRET=<длинная случайная строка>
 DATABASE_PATH=data/keypulse.db
 ```
 
@@ -141,7 +141,7 @@ KEY-XXXXXXXX        →  KEY-A1B2C3D4
 
 ```bash
 curl -X POST http://localhost:8080/api/activate \
-  -H "X-Api-Secret: <API_SECRET>" \
+  -H "X-Api-Secret: <твой API_SECRET>" \
   -H "Content-Type: application/json" \
   -d '{"key":"KP-7F3A-9K2M-QW4Z","hwid":"AA-BB-CC-DD"}'
 ```
