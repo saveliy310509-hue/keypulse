@@ -1,14 +1,21 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
-# ВАЖНО: disk (постоянный диск) доступен только на платных инстансах.
-# На free-плане база SQLite будет теряться при каждом деплое.
+#
+# Free-план:
+#   • сервис засыпает после 15 минут без запросов  -> лечится KEEPALIVE_URL
+#   • диск недоступен, файловая система стирается  -> база в Turso (LIBSQL_URL)
+#
+# После создания сервиса Render даст домен вида https://keypulse.onrender.com —
+# пропиши его в KEEPALIVE_URL (окружение -> Environment -> Add Environment Variable).
 services:
   - type: web
     name: keypulse
     runtime: python
-    plan: starter
+    plan: free
+    region: frankfurt
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: BOT_TOKEN
         sync: false
@@ -16,11 +23,15 @@ services:
         sync: false
       - key: API_SECRET
         sync: false
-      - key: DATABASE_PATH
-        value: /var/data/keypulse.db
+      # Turso: https://app.turso.tech -> Create Database -> URL + Token
+      - key: LIBSQL_URL
+        sync: false
+      - key: LIBSQL_AUTH_TOKEN
+        sync: false
+      # Публичный адрес этого сервиса, чтобы он сам себя не давал усыпить
+      - key: KEEPALIVE_URL
+        sync: false
+      - key: KEEPALIVE_INTERVAL
+        value: "600"
       - key: PYTHON_VERSION
         value: 3.12.0
-    disk:
-      name: keypulse-data
-      mountPath: /var/data
-      sizeGB: 1

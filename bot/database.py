@@ -1,8 +1,15 @@
+import asyncio
 import aiosqlite
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from bot.config import DATABASE_PATH
+
+from bot.config import DATABASE_PATH, LIBSQL_AUTH_TOKEN, LIBSQL_URL
+
+try:  # libSQL нужен только если задан LIBSQL_URL
+    from libsql_client import create_client as _create_libsql_client
+except ImportError:  # pragma: no cover
+    _create_libsql_client = None
 
 DEFAULT_TEXTS = {
     "welcome_title": "Добро пожаловать в KeyPulse",
@@ -85,12 +92,82 @@ DEFAULT_BUTTONS = {
 }
 
 
+class LibsqlCursor:
+    """Курсор-обёртка над ResultSet libSQL (API совместим с aiosqlite)."""
+
+    def __init__(self, result_set):
+        self._rs = result_set
+
+    @property
+    def lastrowid(self):
+        return getattr(self._rs, "last_insert_rowid", None)
+
+    async def fetchone(self):
+        rows = self._rs.rows
+        return rows[0] if rows else None
+
+    async def fetchall(self):
+        return list(self._rs.rows)
+
+
+class LibsqlDB:
+    """Тонкая обёртка: те же вызовы execute/commit, что и у aiosqlite."""
+
+    def __init__(self, client):
+        self._client = client
+
+    async def execute(self, sql: str, params=()):
+        result = await self._client.execute(sql, list(params) if params else [])
+        return LibsqlCursor(result)
+
+    async def commit(self):
+        # libSQL выполняет каждый запрос в autocommit-режиме
+        return None
+
+
+_libsql_client = None
+_libsql_lock = asyncio.Lock()
+
+
+async def _shared_libsql_client():
+    global _libsql_client
+    if _create_libsql_client is None:
+        raise RuntimeError(
+            "LIBSQL_URL задан, но пакет libsql-client не установлен: pip install libsql-client"
+        )
+    if _libsql_client is None:
+        async with _libsql_lock:
+            if _libsql_client is None:
+                _libsql_client = _create_libsql_client(
+                    LIBSQL_URL, auth_token=LIBSQL_AUTH_TOKEN or None
+                )
+    return _libsql_client
+
+
+async def close_db():
+    """Закрывает общий libSQL-клиент (вызывается при остановке бота)."""
+    global _libsql_client
+    if _libsql_client is not None:
+        try:
+            await _libsql_client.close()
+        finally:
+            _libsql_client = None
+
+
 @asynccontextmanager
 async def get_db():
-    """Асинхронный контекстный менеджер подключения к SQLite.
+    """Подключение к БД.
+
+    LIBSQL_URL задан  -> Turso/libSQL (для Render/Fly free, где диск стирается)
+    LIBSQL_URL пустой -> локальный SQLite-файл
 
     Использование:  async with get_db() as db: ...
     """
+    if LIBSQL_URL:
+        client = await _shared_libsql_client()
+        yield LibsqlDB(client)
+        return
+
     Path(DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
     db = await aiosqlite.connect(DATABASE_PATH)
     db.row_factory = aiosqlite.Row

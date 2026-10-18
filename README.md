@@ -163,7 +163,19 @@ curl -X POST http://localhost:8080/api/activate \
 
 ## Хостинг
 
-**Нужен бесплатный 24/7?** → [docs/FREE_HOSTING.md](docs/FREE_HOSTING.md): сравнение GCP e2-micro и Oracle Always Free, пошаговая установка, бэкапы, мониторинг.
+**Render free без сна** → [docs/RENDER.md](docs/RENDER.md): keep-alive + база в Turso, чтобы ключи не терялись при рестарте.
+
+**Бесплатный 24/7 на VM** → [docs/FREE_HOSTING.md](docs/FREE_HOSTING.md): GCP e2-micro и Oracle Always Free.
+
+### Render.com (free)
+
+`render.yaml` уже настроен. В Render задай переменные:
+
+| Переменная | Зачем |
+|---|---|
+| `BOT_TOKEN`, `ADMIN_ID`, `API_SECRET` | базовое |
+| `LIBSQL_URL`, `LIBSQL_AUTH_TOKEN` | база в [Turso](https://turso.tech) — на free-плане диск стирается |
+| `KEEPALIVE_URL` | `https://<сервис>.onrender.com/health` — бот сам себя будит |
 
 ### Одна команда на Ubuntu/Debian VPS
 
