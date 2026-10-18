@@ -1,4 +1,4 @@
-# deploy_railway.ps1 - deploy KeyPulse to Railway in one command
+﻿# deploy_railway.ps1 - deploy KeyPulse to Railway in one command
 #
 # Requires:
 #   1) Node.js (for CLI) and a Railway account

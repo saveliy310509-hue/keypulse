@@ -163,7 +163,19 @@ curl -X POST http://localhost:8080/api/activate \
 
 ## Хостинг
 
-### Docker (рекомендуется)
+**Нужен бесплатный 24/7?** → [docs/FREE_HOSTING.md](docs/FREE_HOSTING.md): сравнение GCP e2-micro и Oracle Always Free, пошаговая установка, бэкапы, мониторинг.
+
+### Одна команда на Ubuntu/Debian VPS
+
+```bash
+sudo REPO_URL=https://github.com/USER/keypulse.git bash deploy/install.sh
+sudo nano /opt/keypulse/.env     # BOT_TOKEN, ADMIN_ID, API_SECRET
+sudo systemctl restart keypulse
+```
+
+Скрипт сам ставит зависимости, создаёт venv, пользователя `keypulse`, systemd-юнит с `Restart=always` и включает автозапуск.
+
+### Docker
 
 ```bash
 docker compose up -d --build
@@ -172,12 +184,12 @@ docker compose logs -f
 
 Порт `8080` проброшен наружу — если HWID API не нужен снаружи, убери `ports` из `docker-compose.yml`. База живёт в volume `./data`.
 
-### VPS + systemd
+### VPS + systemd вручную
 
 ```bash
-apt update && apt install -y python3.12 python3.12-venv
+apt update && apt install -y python3 python3-venv
 git clone <repo> /opt/keypulse && cd /opt/keypulse
-python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 cp deploy/keypulse.service /etc/systemd/system/
 systemctl daemon-reload && systemctl enable --now keypulse
 journalctl -u keypulse -f
@@ -188,9 +200,16 @@ journalctl -u keypulse -f
 - Build: `pip install -r requirements.txt`
 - Start: `python main.py`
 - Переменные окружения — те же, что в `.env`
-- Порт API задаётся переменной `API_PORT` (платформы обычно дают `$PORT`)
+- Порт API берётся из `$PORT`, которую подставляет платформа
 
-> ⚠️ SQLite на эфемерных хостингах (Railway/Render free) теряется при ребилде — подключи постоянный volume или перейди на Postgres.
+> ⚠️ SQLite на эфемерных хостингах (Railway/Render free) теряется при ребилде — подключи постоянный volume. На free-планах Render/Railway бот ещё и засыпает, для 24/7 нужна VM.
+
+### Бэкапы
+
+```bash
+sudo cp deploy/backup.sh /opt/keypulse/backup.sh && sudo chmod +x /opt/keypulse/backup.sh
+sudo crontab -e   # 0 4 * * * /opt/keypulse/backup.sh >> /var/log/keypulse-backup.log 2>&1
+```
 
 ---
 

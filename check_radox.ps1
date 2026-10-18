@@ -1,4 +1,4 @@
-# check_radox.ps1 — быстрая диагностика лимитов Radox AI
+﻿# check_radox.ps1 — быстрая диагностика лимитов Radox AI
 # Использование:
 #   $env:RADOX_API_KEY = "cc_..."
 #   pwsh -File .\check_radox.ps1

@@ -5,12 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
+User=keypulse
+Group=keypulse
 WorkingDirectory=/opt/keypulse
 EnvironmentFile=/opt/keypulse/.env
 ExecStart=/opt/keypulse/.venv/bin/python /opt/keypulse/main.py
 Restart=always
 RestartSec=5
+StartLimitIntervalSec=0
 StandardOutput=journal
 StandardError=journal
 
